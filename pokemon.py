@@ -1,6 +1,6 @@
 
 typeAdvantages={
-    "Fire": ["Grass, Ice"],
+    "Fire": ["Grass", "Ice"],
     "Water": ["Fire", "Rock"],
     "Grass": ["Water", "Rock"],
     "Ice": ["Grass"],
@@ -8,12 +8,12 @@ typeAdvantages={
 }
 
 class Pokemon:
-    def __init__(self, name, level, pokeType, maxHealth, currentHealth, faint=False):
+    def __init__(self, name, level, pokeType, faint=False):
         self.name=name
         self.type=pokeType
         self.level=level 
-        self.maxHealth=maxHealth
-        self.currentHealth=currentHealth
+        self.maxHealth=level*5
+        self.currentHealth=self.maxHealth
         self.isFaint=faint
 
     def knockOut(self):
@@ -22,10 +22,11 @@ class Pokemon:
             print(f"{self.name} fainted!")
     
     def loseHealth(self, damage):
-        self.currentHealth-=damage
-        print(f"{self.name} now has {self.currentHealth} health!") 
-        if self.currentHealth<=0:
+         if self.currentHealth-damage<=0:   
             self.knockOut()
+         else:
+             self.currentHealth-=damage
+             print(f"{self.name} now has {self.currentHealth} health!")
     
     def gainHealth(self, recovery):
          if recovery+self.currentHealth>=self.maxHealth:
@@ -56,22 +57,20 @@ class Pokemon:
         
         print(f"{self.name} attacked {enemy.name} and dealt {damage} damage!")
         enemy.loseHealth(damage)
+
+    def printStats(self):
+        print(f"Name: {self.name}, Level: {self.level}, Max Health: {self.maxHealth}, Current Health: {self.currentHealth}.")
+
     
     def __repr__(self):
         return f"{self.name}"
 
 class Trainer:
-    def __init__(self,name,numPotions,currPoke, pokeTeam=None):
+    def __init__(self,name,numPotions, pokeTeam):
         self.name=name 
         self.numPotions=numPotions
-        self.currPoke=currPoke
-        if pokeTeam==None:
-            self.pokeTeam=[self.currPoke]
-        elif len(pokeTeam)>6:
-            print("You cannot have more than 6 pokemon! Only the first 6 in the team will be selected")
-            self.pokeTeam=pokeTeam[:6]
-        else:
-            self.pokeTeam=pokeTeam
+        self.currPoke=0 #index in the list, initially we take the first pokemon
+        self.pokeTeam=pokeTeam
         
     def usePotion(self):
         if self.numPotions>0:
@@ -84,10 +83,40 @@ class Trainer:
         self.pokeTeam[self.currPoke].attack(otherTrainer.pokeTeam[otherTrainer.currPoke])
 
     def switchPoke(self, pokeToSwitch):
-        if pokeToSwitch.isFaint:
-            print(f"{pokeToSwitch} has fainted, can't switch to it.")
-        elif pokeToSwitch not in self.pokeTeam:
+        #pokeToSwitch is a name
+        pokemon=None
+        for x in self.pokeTeam:
+            if x.__repr__()==pokeToSwitch:
+                pokemon=x
+                break
+                
+        if pokemon==None:
             print(f"{pokeToSwitch} is not in your team!")
+        elif pokemon.isFaint:
+            print(f"{pokeToSwitch} has fainted, can't switch to it.")
         else:
-            self.currPoke= self.pokeTeam.index(pokeToSwitch)
+            self.currPoke= self.pokeTeam.index(pokemon)
+            print(f"{self.name} switched to {pokemon}")
         
+    def printCurrPoke(self):
+        print(f"{self.name}'s Current Active Pokemon: {self.pokeTeam[self.currPoke]}")
+####Testing
+alleosPoke=[Pokemon("Charizard", 50, "Fire"), Pokemon("Swampert", 50, "Water")]
+alleo= Trainer("Alleo", 5, alleosPoke )
+garysPoke=[Pokemon("Venasaur", 50, "Grass"), Pokemon("Onyx", 50, "Rock")]
+gary= Trainer("Gary",0, garysPoke)
+
+alleo.printCurrPoke()
+for poke in alleo.pokeTeam:
+    poke.printStats()
+for poke in gary.pokeTeam:
+    poke.printStats()
+alleo.attackOther(gary)
+gary.attackOther(alleo)
+alleo.attackOther(gary)
+gary.attackOther(alleo)
+alleo.attackOther(gary)
+gary.switchPoke("Onyx")
+# for x in garysPoke:
+#     if x.__repr__()=="Venasaur":
+#         print(x.level)
